@@ -1,95 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>3D Food Demo</title>
-  <style>
-    body { margin: 0; background: #111; overflow: hidden; }
-    canvas { display: block; }
-    .text {
-      position: absolute;
-      top: 20px;
-      width: 100%;
-      text-align: center;
-      color: white;
-      font-family: Arial;
-      font-size: 18px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Food Demo</title>
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #111;
+            font-family: Arial, sans-serif;
+        }
+
+        #title {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 24px;
+            z-index: 100;
+        }
+    </style>
 </head>
 <body>
-  <div class="text">🍔 3D Food Demo (Rotate with mouse/finger)</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<div id="title">
+    🍔 3D Food Demo
+</div>
 
-  <script>
-    // Scene setup
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x111111);
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
+<script>
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x111111);
+
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+);
+
+const renderer = new THREE.WebGLRenderer({
+    antialias: true
+});
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+document.body.appendChild(
+    renderer.domElement
+);
+
+const geometry = new THREE.BoxGeometry(
+    1,
+    1,
+    1
+);
+
+const material = new THREE.MeshNormalMaterial();
+
+const cube = new THREE.Mesh(
+    geometry,
+    material
+);
+
+scene.add(cube);
+
+camera.position.z = 3;
+
+function animate() {
+
+    requestAnimationFrame(animate);
+
+    cube.rotation.x += 0.01;
+    cube.rotation.y += 0.01;
+
+    renderer.render(
+        scene,
+        camera
     );
-    camera.position.z = 3;
+}
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+animate();
 
-    // Simple "burger-like" 3D object (stacked shapes)
-    const group = new THREE.Group();
+window.addEventListener(
+    'resize',
+    () => {
 
-    const material1 = new THREE.MeshStandardMaterial({ color: 0xffcc66 }); // bun
-    const material2 = new THREE.MeshStandardMaterial({ color: 0x55aa55 }); // lettuce
-    const material3 = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); // patty
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
 
-    const bunTop = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), material1);
-    bunTop.scale.y = 0.5;
-    bunTop.position.y = 0.8;
+        camera.updateProjectionMatrix();
 
-    const lettuce = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.2, 32), material2);
-    lettuce.position.y = 0.2;
-
-    const patty = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.3, 32), material3);
-    patty.position.y = -0.3;
-
-    group.add(bunTop);
-    group.add(lettuce);
-    group.add(patty);
-
-    scene.add(group);
-
-    // Light
-    const light = new THREE.PointLight(0xffffff, 1);
-    light.position.set(5, 5, 5);
-    scene.add(light);
-
-    // Mouse control (simple rotation)
-    let mouseX = 0;
-    document.addEventListener("mousemove", (e) => {
-      mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-    });
-
-    function animate() {
-      requestAnimationFrame(animate);
-
-      group.rotation.y += 0.01;
-      group.rotation.y += mouseX * 0.01;
-
-      renderer.render(scene, camera);
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
     }
+);
 
-    animate();
+</script>
 
-    // Resize
-    window.addEventListener("resize", () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-  </script>
 </body>
 </html>
