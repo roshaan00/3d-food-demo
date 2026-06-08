@@ -1,51 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Food Demo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive 3D Bowl</title>
 
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: #111;
-            font-family: Arial, sans-serif;
-        }
-
-        #title {
-            position: absolute;
-            top: 20px;
-            width: 100%;
-            text-align: center;
-            color: white;
-            font-size: 24px;
-            z-index: 100;
-        }
-    </style>
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    background:#0f0f0f;
+}
+canvas{
+    display:block;
+}
+</style>
 </head>
 <body>
 
-<div id="title">
-    🍔 3D Food Demo
-</div>
+<script type="module">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-<script>
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x111111);
 
 const camera = new THREE.PerspectiveCamera(
-    75,
+    45,
     window.innerWidth / window.innerHeight,
     0.1,
-    1000
+    100
 );
 
+camera.position.z = 4;
+
 const renderer = new THREE.WebGLRenderer({
-    antialias: true
+    antialias:true
 });
 
 renderer.setSize(
@@ -53,45 +43,143 @@ renderer.setSize(
     window.innerHeight
 );
 
+renderer.shadowMap.enabled = true;
+
 document.body.appendChild(
     renderer.domElement
 );
 
-const geometry = new THREE.BoxGeometry(
-    1,
-    1,
-    1
-);
+const loader = new THREE.TextureLoader();
 
-const material = new THREE.MeshNormalMaterial();
+Promise.all([
+    loader.loadAsync("bowl.jpg"),
+    loader.loadAsync("bowl.jpg")
+]).then(([colorMap, displacementMap])=>{
 
-const cube = new THREE.Mesh(
-    geometry,
-    material
-);
+    colorMap.anisotropy = 16;
 
-scene.add(cube);
+    const geometry =
+        new THREE.PlaneGeometry(
+            3,
+            3,
+            256,
+            256
+        );
 
-camera.position.z = 3;
+    const material =
+        new THREE.MeshStandardMaterial({
+            map: colorMap,
+            displacementMap: displacementMap,
+            displacementScale: 0.25,
+            roughness: 0.7,
+            metalness: 0.05
+        });
 
-function animate() {
+    const bowl =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
 
-    requestAnimationFrame(animate);
+    bowl.castShadow = true;
+    bowl.receiveShadow = true;
 
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
+    scene.add(bowl);
 
-    renderer.render(
-        scene,
-        camera
+    animate(bowl);
+});
+
+const ambient =
+    new THREE.AmbientLight(
+        0xffffff,
+        1.5
     );
-}
 
-animate();
+scene.add(ambient);
+
+const keyLight =
+    new THREE.DirectionalLight(
+        0xffffff,
+        2
+    );
+
+keyLight.position.set(
+    4,
+    5,
+    5
+);
+
+scene.add(keyLight);
+
+const rimLight =
+    new THREE.DirectionalLight(
+        0xffffff,
+        1
+    );
+
+rimLight.position.set(
+    -4,
+    2,
+    -3
+);
+
+scene.add(rimLight);
+
+let mouseX = 0;
+let mouseY = 0;
 
 window.addEventListener(
-    'resize',
-    () => {
+    "mousemove",
+    (e)=>{
+
+        mouseX =
+            (e.clientX /
+            window.innerWidth) * 2 - 1;
+
+        mouseY =
+            -(e.clientY /
+            window.innerHeight) * 2 + 1;
+    }
+);
+
+function animate(mesh){
+
+    function render(){
+
+        requestAnimationFrame(render);
+
+        mesh.rotation.y += (
+            mouseX * 0.45 -
+            mesh.rotation.y
+        ) * 0.08;
+
+        mesh.rotation.x += (
+            mouseY * 0.25 -
+            mesh.rotation.x
+        ) * 0.08;
+
+        mesh.position.x += (
+            mouseX * 0.15 -
+            mesh.position.x
+        ) * 0.08;
+
+        mesh.position.y += (
+            mouseY * 0.15 -
+            mesh.position.y
+        ) * 0.08;
+
+        renderer.render(
+            scene,
+            camera
+        );
+    }
+
+    render();
+}
+
+window.addEventListener(
+    "resize",
+    ()=>{
 
         camera.aspect =
             window.innerWidth /
